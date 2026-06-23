@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
     ) { permissions ->
         if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true ||
-										permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] == true
+            permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] == true
         ) {
             obtenerUbicacionRealTime() // 👈 Cambiado a la función en tiempo real
         } else {
