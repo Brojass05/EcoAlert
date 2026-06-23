@@ -5,7 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -19,9 +18,7 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import androidx.work.Constraints
 import androidx.work.Data
-import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -111,14 +108,17 @@ class MainActivity : ComponentActivity() {
                 arrayOf(
                     Manifest.permission.POST_NOTIFICATIONS,
                     Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
 
                 )
             )
         } else {
             obtenerUbicacionRealTime() // 👈 Cambiado a la función en tiempo real
+
         }
+
+
     }
 
     /**
@@ -167,6 +167,7 @@ class MainActivity : ComponentActivity() {
 
         WorkManager.getInstance(applicationContext).enqueue(workRequest)
     }
+
     private fun createInputDataForWorkRequest(lastPm: Float): Data {
         return workDataOf(PmCheckerWorker.KEY_LAST_PM to lastPm)
     }
