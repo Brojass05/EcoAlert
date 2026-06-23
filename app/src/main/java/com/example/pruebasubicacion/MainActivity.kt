@@ -44,7 +44,8 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true ||
+										permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] == true
         ) {
             obtenerUbicacionRealTime() // 👈 Cambiado a la función en tiempo real
         } else {
@@ -99,7 +100,11 @@ class MainActivity : ComponentActivity() {
             ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
+            ) != PackageManager.PERMISSION_GRANTED &&
+										ActivityCompat.checkSelfPermission(
+														this,
+														Manifest.permission.ACCESS_BACKGROUND_LOCATION
+										) != PackageManager.PERMISSION_GRANTED
         ) {
 
             requestPermissionLauncher.launch(
@@ -107,6 +112,7 @@ class MainActivity : ComponentActivity() {
                     Manifest.permission.POST_NOTIFICATIONS,
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
+																	Manifest.permission.ACCESS_BACKGROUND_LOCATION
 
                 )
             )
