@@ -7,10 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pruebasubicacion.data.ClimaRepository
 import com.example.pruebasubicacion.data.model.ClimaEstado
+
 import com.example.pruebasubicacion.util.Log
+
 import kotlinx.coroutines.launch
 
-class UbicacionViewModel : ViewModel() {
+
+class UbicacionViewModel(): ViewModel() {
 
     private val repository = ClimaRepository()
 
@@ -38,4 +41,6 @@ class UbicacionViewModel : ViewModel() {
             }
         }
     }
+
+
 }

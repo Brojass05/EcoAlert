@@ -9,7 +9,9 @@ import com.example.pruebasubicacion.presentation.ui.notifications.showSimpleNoti
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
+import java.io.IOException
 
 private const val TAG = "PmCheckerWorker"
 
@@ -49,8 +51,14 @@ class PmCheckerWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(
         } catch (e: SecurityException) {
             Log.e(TAG, "Error de permisos: ${e.message}")
             Result.failure()
+        } catch (e: CancellationException) {
+            Log.i(TAG, "Worker cancelado")
+            throw e // Re-lanzar para que WorkManager sepa que fue cancelado
+        } catch (e: IOException) {
+            Log.e(TAG, "Error de red en el worker (reintentando): ${e.message}")
+            Result.retry()
         } catch (e: Exception) {
-            Log.e(TAG, "Error en el worker: ${e.message}", e)
+            Log.e(TAG, "Error inesperado en el worker: ${e.message}", e)
             Result.failure()
         }
     }

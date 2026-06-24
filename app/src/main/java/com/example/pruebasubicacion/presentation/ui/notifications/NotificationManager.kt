@@ -92,6 +92,8 @@ fun showSimpleNotificationOpenActivity(context: Context, newPm: Float, lastPm: F
             .setContentText("El nivel de contaminacion ha bajado")
             .setContentIntent(pendingIntent) // <--- Link the click with the destination
             .setAutoCancel(true) // Deleted when touched
+    }else if(newPm==lastPm){
+        return
     }
 
     // 4. LAUNCH (With permission check to avoid errors)

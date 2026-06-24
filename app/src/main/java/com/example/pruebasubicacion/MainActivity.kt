@@ -2,6 +2,7 @@ package com.example.pruebasubicacion
 
 import android.Manifest
 import android.app.NotificationChannel
+import android.util.Log
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
@@ -13,16 +14,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Data
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.example.pruebasubicacion.presentation.ui.notifications.showSimpleNotification
+
 import com.example.pruebasubicacion.presentation.view.EcoAlertScreen
 import com.example.pruebasubicacion.presentation.viewmodel.UbicacionViewModel
 import com.example.pruebasubicacion.workers.PmCheckerWorker
@@ -40,29 +43,35 @@ class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true ||
-            permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] == true
-        ) {
-            obtenerUbicacionRealTime() // 👈 Cambiado a la función en tiempo real
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        val postNotificationGranted = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
+        val backgroundLocationGranted = permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] ?: false
+        if (
+            fineLocationGranted ||
+            coarseLocationGranted ||
+            postNotificationGranted ||
+            backgroundLocationGranted
+            ) {
+            obtenerUbicacionRealTime()
         } else {
+
             Toast.makeText(this, "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show()
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    @Override
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         createNotificationChannel(this)
         enableEdgeToEdge()
+
 
         setContent {
             EcoAlertScreen(estado = vistaModelo.state)
         }
 
         // AUTOMATIZACIÓN: Disparamos la verificación de permisos y GPS apenas abre la app
-        checkPermissionsAndGetLocation()
-
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
@@ -72,59 +81,48 @@ class MainActivity : ComponentActivity() {
 
             override fun onStop(owner: LifecycleOwner) {
                 // App went to the background (User "exited" the UI)
-                showSimpleNotification(this@MainActivity)
+                Log.d("MainActivity", "Enqueuing unique work onStop")
                 setPeriodicTimeWorkRequest(vistaModelo.state.lastPm)
-                println("Ultima PM: ${vistaModelo.state.lastPm}")
-                println("App is now in the background!")
+                Log.i("MainActivity","Ultima PM: ${vistaModelo.state.lastPm}")
+                Log.i("MainActivity","App is now in the background!")
             }
         })
+        checkPermissionsAndGetLocation()
     }
 
-    /**
-     * Verifica si la aplicación ya cuenta con los permisos necesarios del sistema.
-     * Si no los tiene, los solicita al usuario.
-     */
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun checkPermissionsAndGetLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        val permissionsToRequest = mutableListOf<String>()
 
-            requestPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.POST_NOTIFICATIONS,
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        val fineLocationGranted = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val coarseLocationGranted = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
-                )
-            )
-        } else {
-            obtenerUbicacionRealTime() // 👈 Cambiado a la función en tiempo real
-
+        // Si falta alguno de los de ubicación frontal, los pedimos
+        if (!fineLocationGranted || !coarseLocationGranted) {
+            permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
+            permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION)
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
 
+        if (permissionsToRequest.isNotEmpty()) {
+            requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+        } else {
+            // Si ya tenemos los frontales, verificamos el de segundo plano (Background)
+            // En Android 11+ (API 30), este permiso DEBE pedirse por separado de los frontales.
+            // Nota: ACCESS_BACKGROUND_LOCATION requiere API 29+ (que es nuestro minSdk)
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
+            } else {
+                obtenerUbicacionRealTime()
+            }
+        }
     }
 
-    /**
-     * 🛠️ SOLUCIÓN: Forza el encendido del GPS para buscar las coordenadas exactas actuales
-     * evitando usar el caché antiguo que te movía a Providencia.
-     */
+
     private fun obtenerUbicacionRealTime() {
         val fusedClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -148,6 +146,7 @@ class MainActivity : ComponentActivity() {
                         Toast.LENGTH_LONG
                     ).show()
                 }
+
             }
         } catch (e: SecurityException) {
             Toast.makeText(this, "Error de permisos de seguridad: ${e.message}", Toast.LENGTH_SHORT)
@@ -157,15 +156,21 @@ class MainActivity : ComponentActivity() {
 
 
     private fun setPeriodicTimeWorkRequest(lastPm: Float) {
-
+        Log.d("MainActivity", "setPeriodicTimeWorkRequest called with lastPm: $lastPm")
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
 
         val workRequest = PeriodicWorkRequestBuilder<PmCheckerWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(constraints)
             .setInputData(createInputDataForWorkRequest(lastPm))
             .build()
 
-
-
-        WorkManager.getInstance(applicationContext).enqueue(workRequest)
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "PM_CHECKER_WORKER_UNIQUE",
+            ExistingPeriodicWorkPolicy.UPDATE,
+            workRequest
+        )
     }
 
     private fun createInputDataForWorkRequest(lastPm: Float): Data {
@@ -174,7 +179,7 @@ class MainActivity : ComponentActivity() {
 }
 
 private fun createNotificationChannel(context: Context) {
-    // Only necessary for API 26+ (Android 8.0)
+    // Solo necesario para API 26+ (Nuestro minSdk es 29, así que siempre se ejecuta)
     val name = "My App Notifications"
     val descriptionText = "This channel is used for general alerts"
     val importance = NotificationManager.IMPORTANCE_DEFAULT

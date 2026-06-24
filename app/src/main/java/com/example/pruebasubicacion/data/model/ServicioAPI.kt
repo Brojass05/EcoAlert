@@ -1,9 +1,11 @@
 package com.example.pruebasubicacion.data.model
 
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
+import java.util.concurrent.TimeUnit
 
 interface ServicioAPI {
     @GET("v1/air-quality")
@@ -17,10 +19,18 @@ interface ServicioAPI {
         private var servicioAPI: ServicioAPI? = null
         private const val BASE_URL = "https://air-quality-api.open-meteo.com/"
 
+        private val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
+
         fun getInstance(): ServicioAPI {
             if (servicioAPI == null) {
                 servicioAPI = Retrofit.Builder()
                     .baseUrl(BASE_URL)
+                    .client(okHttpClient)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                     .create(ServicioAPI::class.java)
@@ -42,10 +52,18 @@ interface WeatherServicioAPI {
         private var weatherServicioAPI: WeatherServicioAPI? = null
         private const val BASE_URL = "https://api.open-meteo.com/"
 
+        private val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
+
         fun getInstance(): WeatherServicioAPI {
             if (weatherServicioAPI == null) {
                 weatherServicioAPI = Retrofit.Builder()
                     .baseUrl(BASE_URL)
+                    .client(okHttpClient)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                     .create(WeatherServicioAPI::class.java)
