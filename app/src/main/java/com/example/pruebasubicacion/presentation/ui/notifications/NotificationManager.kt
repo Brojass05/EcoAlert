@@ -7,27 +7,18 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.WarningAmber
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.IconCompat
 import com.example.pruebasubicacion.MainActivity
-import com.example.pruebasubicacion.presentation.viewmodel.UbicacionViewModel
 
 
-val TAG = "Notification Manager"
+val TAG = "NotificationManager"
 
 
 @Composable
@@ -85,18 +76,13 @@ fun showSimpleNotificationOpenActivity(context: Context, newPm: Float, lastPm: F
     // 3. BUILD THE NOTIFICATION
     val builder = NotificationCompat.Builder(context, "CHANNEL_ID_EJEMPLO")
     if(newPm>lastPm){
-        notificacionPeligro(builder,pendingIntent)
-
+        notificacionSubida(builder,pendingIntent)
     }else if(newPm<lastPm){
-        builder.setSmallIcon(R.drawable.ic_dialog_info)
-            .setContentTitle("Informacion")
-            .setContentText("El nivel de contaminacion ha bajado")
-            .setContentIntent(pendingIntent) // <--- Link the click with the destination
-            .setAutoCancel(true) // Deleted when touched
+        notificacionBajada(builder,pendingIntent)
     }else if(newPm==lastPm){
-        Log.i(TAG, "No han habido cambios")
-        return
-
+        //notificacionNoCambioSinContenido()
+        notificacionNoCambio(builder,pendingIntent)
+        //return
     }
 
     // 4. LAUNCH (With permission check to avoid errors)
@@ -108,12 +94,30 @@ fun showSimpleNotificationOpenActivity(context: Context, newPm: Float, lastPm: F
         NotificationManagerCompat.from(context).notify(101, builder.build())
     }
 }
-fun notificacionPeligro(builder: NotificationCompat.Builder, pendingIntent:PendingIntent ) {
+fun notificacionSubida(builder: NotificationCompat.Builder, pendingIntent:PendingIntent ) {
     builder.setSmallIcon(R.drawable.ic_dialog_alert)
         .setContentTitle("Alerta!!!")
         .setContentText("El nivel de contaminacion ha subido \nTen cuidado si vas a salir")
         .setContentIntent(pendingIntent) // <--- Link the click with the destination
         .setAutoCancel(true) // Deleted when touched
+}
+fun notificacionBajada(builder: NotificationCompat.Builder, pendingIntent:PendingIntent ) {
+    builder.setSmallIcon(R.drawable.ic_dialog_info)
+        .setContentTitle("Informacion")
+        .setContentText("El nivel de contaminacion ha bajado")
+        .setContentIntent(pendingIntent) // <--- Link the click with the destination
+        .setAutoCancel(true) // Deleted when touched
+}
+fun notificacionNoCambio(builder: NotificationCompat.Builder, pendingIntent:PendingIntent ) {
+    builder.setSmallIcon(R.drawable.ic_dialog_email)
+        .setContentTitle("Informacion")
+        .setContentText("El nivel de contaminacion no han habido cambios")
+        .setContentIntent(pendingIntent) // <--- Link the click with the destination
+        .setAutoCancel(true) // Deleted when touched
+}
+fun notificacionNoCambioSinContenido( ) {
+    Log.i(TAG, "No han habido cambios")
+
 }
 
 

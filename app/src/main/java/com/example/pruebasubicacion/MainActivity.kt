@@ -28,6 +28,7 @@ import androidx.work.workDataOf
 
 import com.example.pruebasubicacion.presentation.view.EcoAlertScreen
 import com.example.pruebasubicacion.presentation.viewmodel.UbicacionViewModel
+import com.example.pruebasubicacion.presentation.ui.notifications.showSimpleNotificationOpenActivity
 import com.example.pruebasubicacion.workers.PmCheckerWorker
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -74,6 +75,7 @@ class MainActivity : ComponentActivity() {
         // AUTOMATIZACIÓN: Disparamos la verificación de permisos y GPS apenas abre la app
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+
             override fun onStart(owner: LifecycleOwner) {
                 // App came to foreground
                 obtenerUbicacionRealTime()
@@ -82,6 +84,9 @@ class MainActivity : ComponentActivity() {
             override fun onStop(owner: LifecycleOwner) {
                 // App went to the background (User "exited" the UI)
                 Log.d("MainActivity", "Enqueuing unique work onStop")
+                //showSimpleNotificationOpenActivity(this@MainActivity,vistaModelo.state.lastPm,vistaModelo.state.lastPm)
+                //showSimpleNotificationOpenActivity(this@MainActivity,87f,vistaModelo.state.lastPm)
+                //showSimpleNotificationOpenActivity(this@MainActivity,(vistaModelo.state.lastPm)-20f,vistaModelo.state.lastPm)
                 setPeriodicTimeWorkRequest(vistaModelo.state.lastPm)
                 Log.i("MainActivity","Ultima PM: ${vistaModelo.state.lastPm}")
                 Log.i("MainActivity","App is now in the background!")

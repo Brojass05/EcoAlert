@@ -13,6 +13,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val TAG = "PmCheckerWorker"
 
@@ -37,7 +38,8 @@ class PmCheckerWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(
                 Priority.PRIORITY_HIGH_ACCURACY,
                 CancellationTokenSource().token
             ).await()
-            delay(30000)
+
+            delay(30000.milliseconds)
 
             if (location != null) {
                 val newPm = repository.getPm25Only(location.latitude, location.longitude)
