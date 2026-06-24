@@ -405,7 +405,9 @@ fun NotificationsView(onClose: () -> Unit) {
             Text("Notificaciones", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             IconButton(onClick = onClose) { Icon(Icons.Default.Close, null) }
         }
+
         NotificationItemMinimal("Alerta Local", "Niveles de PM2.5 elevados en tu zona.")
+
     }
 }
 

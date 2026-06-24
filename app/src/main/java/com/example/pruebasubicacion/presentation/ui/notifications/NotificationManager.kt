@@ -11,7 +11,10 @@ import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -19,11 +22,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.IconCompat
 import com.example.pruebasubicacion.MainActivity
 import com.example.pruebasubicacion.presentation.viewmodel.UbicacionViewModel
 
 
-val textoPrueba = 123
+val TAG = "Notification Manager"
 
 
 @Composable
@@ -47,7 +51,7 @@ fun NotificationButton(nivelPm: Float) {
 fun showSimpleNotification(context: Context) {
     val builder = NotificationCompat.Builder(context, "CHANNEL_ID_EJEMPLO")
         .setSmallIcon(R.drawable.ic_dialog_info) // Mandatory icon
-        .setContentTitle("Hello! ${textoPrueba}")
+        .setContentTitle("Hello!")
         .setContentText("This is a notification from Jetpack Compose")
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setAutoCancel(true) // Closes when touched
@@ -81,11 +85,8 @@ fun showSimpleNotificationOpenActivity(context: Context, newPm: Float, lastPm: F
     // 3. BUILD THE NOTIFICATION
     val builder = NotificationCompat.Builder(context, "CHANNEL_ID_EJEMPLO")
     if(newPm>lastPm){
-        builder.setSmallIcon(R.drawable.ic_dialog_alert)
-            .setContentTitle("Alerta!!!")
-            .setContentText("El nivel de contaminacion ha subido \nTen cuidado si vas a salir")
-            .setContentIntent(pendingIntent) // <--- Link the click with the destination
-            .setAutoCancel(true) // Deleted when touched
+        notificacionPeligro(builder,pendingIntent)
+
     }else if(newPm<lastPm){
         builder.setSmallIcon(R.drawable.ic_dialog_info)
             .setContentTitle("Informacion")
@@ -93,7 +94,9 @@ fun showSimpleNotificationOpenActivity(context: Context, newPm: Float, lastPm: F
             .setContentIntent(pendingIntent) // <--- Link the click with the destination
             .setAutoCancel(true) // Deleted when touched
     }else if(newPm==lastPm){
+        Log.i(TAG, "No han habido cambios")
         return
+
     }
 
     // 4. LAUNCH (With permission check to avoid errors)
@@ -105,6 +108,14 @@ fun showSimpleNotificationOpenActivity(context: Context, newPm: Float, lastPm: F
         NotificationManagerCompat.from(context).notify(101, builder.build())
     }
 }
+fun notificacionPeligro(builder: NotificationCompat.Builder, pendingIntent:PendingIntent ) {
+    builder.setSmallIcon(R.drawable.ic_dialog_alert)
+        .setContentTitle("Alerta!!!")
+        .setContentText("El nivel de contaminacion ha subido \nTen cuidado si vas a salir")
+        .setContentIntent(pendingIntent) // <--- Link the click with the destination
+        .setAutoCancel(true) // Deleted when touched
+}
+
 
 
 

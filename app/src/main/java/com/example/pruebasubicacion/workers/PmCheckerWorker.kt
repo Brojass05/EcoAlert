@@ -10,6 +10,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
 
@@ -36,6 +37,7 @@ class PmCheckerWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(
                 Priority.PRIORITY_HIGH_ACCURACY,
                 CancellationTokenSource().token
             ).await()
+            delay(30000)
 
             if (location != null) {
                 val newPm = repository.getPm25Only(location.latitude, location.longitude)
