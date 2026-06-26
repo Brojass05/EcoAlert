@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import com.google.android.gms.location.FusedLocationProviderClient
+import java.time.LocalDateTime
 import kotlin.math.round
 
 // Función de utilidad que recibe el contexto y el cliente
@@ -29,4 +30,9 @@ fun getLastKnownLocation(context: Context, fusedLocationClient: FusedLocationPro
 }
 fun Log(tag: String = "ProyectoA", mensaje: String) {
     Log.d(tag, mensaje)
+}
+
+fun getTime(){
+    val actual = LocalDateTime.now()
+    Log.d("Hora", actual.toString())
 }

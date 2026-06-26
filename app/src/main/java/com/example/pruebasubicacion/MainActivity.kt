@@ -6,29 +6,30 @@ import android.util.Log
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
+
 import android.os.Build
 import android.os.Bundle
+
 import android.widget.Toast
+
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ProcessLifecycleOwner
-import androidx.work.Data
+
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.workDataOf
+import com.example.pruebasubicacion.data.UserPreferences
+import com.example.pruebasubicacion.data.dataStore
 
 import com.example.pruebasubicacion.presentation.view.EcoAlertScreen
 import com.example.pruebasubicacion.presentation.viewmodel.UbicacionViewModel
-import com.example.pruebasubicacion.presentation.ui.notifications.showSimpleNotificationOpenActivity
+import com.example.pruebasubicacion.util.getTime
 import com.example.pruebasubicacion.workers.PmCheckerWorker
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -38,7 +39,7 @@ import java.util.concurrent.TimeUnit
 class MainActivity : ComponentActivity() {
 
     // Instancia del ViewModel utilizando el delegado oficial de Android
-    private val vistaModelo: UbicacionViewModel by viewModels()
+    private val vistaModelo: UbicacionViewModel by viewModels { UbicacionViewModel.Factory }
 
     // Launcher para gestionar la solicitud de permisos de ubicación (Precisa y Coarse)
     private val requestPermissionLauncher = registerForActivityResult(
@@ -66,6 +67,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         createNotificationChannel(this)
         enableEdgeToEdge()
+        getTime()
 
 
         setContent {
@@ -74,24 +76,7 @@ class MainActivity : ComponentActivity() {
 
         // AUTOMATIZACIÓN: Disparamos la verificación de permisos y GPS apenas abre la app
 
-        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
-
-            override fun onStart(owner: LifecycleOwner) {
-                // App came to foreground
-                obtenerUbicacionRealTime()
-            }
-
-            override fun onStop(owner: LifecycleOwner) {
-                // App went to the background (User "exited" the UI)
-                Log.d("MainActivity", "Enqueuing unique work onStop")
-                //showSimpleNotificationOpenActivity(this@MainActivity,vistaModelo.state.lastPm,vistaModelo.state.lastPm)
-                //showSimpleNotificationOpenActivity(this@MainActivity,87f,vistaModelo.state.lastPm)
-                //showSimpleNotificationOpenActivity(this@MainActivity,(vistaModelo.state.lastPm)-20f,vistaModelo.state.lastPm)
-                setPeriodicTimeWorkRequest(vistaModelo.state.lastPm)
-                Log.i("MainActivity","Ultima PM: ${vistaModelo.state.lastPm}")
-                Log.i("MainActivity","App is now in the background!")
-            }
-        })
+        setPeriodicTimeWorkRequest()
         checkPermissionsAndGetLocation()
     }
 
@@ -160,27 +145,24 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun setPeriodicTimeWorkRequest(lastPm: Float) {
-        Log.d("MainActivity", "setPeriodicTimeWorkRequest called with lastPm: $lastPm")
+    private fun setPeriodicTimeWorkRequest() {
+        Log.d("MainActivity", "setPeriodicTimeWorkRequest called")
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
         val workRequest = PeriodicWorkRequestBuilder<PmCheckerWorker>(15, TimeUnit.MINUTES)
             .setConstraints(constraints)
-            .setInputData(createInputDataForWorkRequest(lastPm))
             .build()
 
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             "PM_CHECKER_WORKER_UNIQUE",
-            ExistingPeriodicWorkPolicy.UPDATE,
+            ExistingPeriodicWorkPolicy.REPLACE,
             workRequest
         )
     }
 
-    private fun createInputDataForWorkRequest(lastPm: Float): Data {
-        return workDataOf(PmCheckerWorker.KEY_LAST_PM to lastPm)
-    }
+
 }
 
 private fun createNotificationChannel(context: Context) {

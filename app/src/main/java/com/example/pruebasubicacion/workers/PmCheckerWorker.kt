@@ -6,58 +6,63 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.pruebasubicacion.data.ClimaRepository
 import com.example.pruebasubicacion.presentation.ui.notifications.showSimpleNotificationOpenActivity
+import com.example.pruebasubicacion.data.UserPreferences
+import com.example.pruebasubicacion.data.dataStore
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
-import kotlin.time.Duration.Companion.milliseconds
 
 private const val TAG = "PmCheckerWorker"
 
 class PmCheckerWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
 
-    companion object {
-        const val KEY_LAST_PM = "lastPm"
-    }
-
     private val repository = ClimaRepository()
+    private val userPreferences = UserPreferences(ctx.applicationContext.dataStore)
 
     override suspend fun doWork(): Result {
         val appContext = applicationContext
-        val lastPm = inputData.getFloat(KEY_LAST_PM, 0f)
+        val fusedClient = LocationServices.getFusedLocationProviderClient(appContext)
 
         return try {
             Log.i(TAG, "Iniciando verificación de PM en segundo plano")
-            val fusedClient = LocationServices.getFusedLocationProviderClient(appContext)
 
-            // Usamos .await() para esperar la ubicación de forma suspendida (CoroutineWorker)
+            // Leer el valor guardado en DataStore
+            val lastPm = userPreferences.lastPmFlow.first()
+
+            // Obtener ubicación actual
             val location = fusedClient.getCurrentLocation(
                 Priority.PRIORITY_HIGH_ACCURACY,
                 CancellationTokenSource().token
             ).await()
 
-            delay(30000.milliseconds)
-
             if (location != null) {
                 val newPm = repository.getPm25Only(location.latitude, location.longitude)
-                
+
+                // Guardar el nuevo valor en DataStore
+                userPreferences.saveLastPm(newPm)
+
                 // Mostrar notificación si hubo cambios
-                showSimpleNotificationOpenActivity(appContext, newPm, lastPm)
-                
+                showSimpleNotificationOpenActivity(
+                    context = appContext,
+                    newPm = newPm,
+                    lastPm = lastPm
+                )
+
                 Result.success()
             } else {
                 Log.e(TAG, "No se pudo obtener la ubicación")
-                Result.retry() // Reintentar si falló la ubicación
+                Result.retry()
             }
         } catch (e: SecurityException) {
             Log.e(TAG, "Error de permisos: ${e.message}")
             Result.failure()
         } catch (e: CancellationException) {
             Log.i(TAG, "Worker cancelado")
-            throw e // Re-lanzar para que WorkManager sepa que fue cancelado
+            throw e
         } catch (e: IOException) {
             Log.e(TAG, "Error de red en el worker (reintentando): ${e.message}")
             Result.retry()

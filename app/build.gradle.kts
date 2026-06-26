@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.example.pruebasubicacion"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.pruebasubicacion"
         minSdk = 29
-        targetSdk = 35
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -64,7 +64,8 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.activity.compose)
 
-    implementation("androidx.lifecycle:lifecycle-process:2.8.2")
-    implementation("androidx.work:work-runtime-ktx:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-process:2.11.0")
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0")
 }
