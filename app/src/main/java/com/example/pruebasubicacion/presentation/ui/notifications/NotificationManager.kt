@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.pruebasubicacion.MainActivity
+import com.example.pruebasubicacion.util.ChequeadorBackground
 
 
 val TAG = "NotificationManager"
@@ -98,14 +99,21 @@ fun showSimpleNotificationOpenActivity(
     )
     // 3. BUILD THE NOTIFICATION
     val builder = NotificationCompat.Builder(context, "CHANNEL_ID_EJEMPLO")
-    if(newPm>lastPM){
-        notificacionSubida(builder,pendingIntent,newPm,lastPm)
-    }else if(newPm<lastPM){
-        notificacionBajada(builder,pendingIntent,newPm,lastPm)
-    }else if(newPm==lastPm){
-        //notificacionNoCambioSinContenido()
-        notificacionNoCambio(builder,pendingIntent,newPm,lastPm)
-        //return
+    if(ChequeadorBackground.segundoPlano){
+        Log.i("DebugTag","Si estas en segundo plano")
+        if(newPm>lastPM){
+            notificacionSubida(builder,pendingIntent,newPm,lastPm)
+        }else if(newPm<lastPM){
+            notificacionBajada(builder,pendingIntent,newPm,lastPm)
+        }else if(newPm==lastPm){
+            //notificacionNoCambioSinContenido()
+            notificacionNoCambio(builder,pendingIntent,newPm,lastPm)
+            //return
+        }
+
+    }else{
+        Log.i("DebugTag","No estas en segundo plano")
+        return
     }
 
     // 4. LAUNCH (With permission check to avoid errors)

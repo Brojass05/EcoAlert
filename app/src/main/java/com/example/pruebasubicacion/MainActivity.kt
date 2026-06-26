@@ -18,23 +18,29 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.example.pruebasubicacion.data.UserPreferences
-import com.example.pruebasubicacion.data.dataStore
+
+import com.example.pruebasubicacion.util.ChequeadorBackground
 
 import com.example.pruebasubicacion.presentation.view.EcoAlertScreen
 import com.example.pruebasubicacion.presentation.viewmodel.UbicacionViewModel
 import com.example.pruebasubicacion.util.getTime
 import com.example.pruebasubicacion.workers.PmCheckerWorker
+
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+
 import java.util.concurrent.TimeUnit
+
 
 class MainActivity : ComponentActivity() {
 
@@ -68,16 +74,33 @@ class MainActivity : ComponentActivity() {
         createNotificationChannel(this)
         enableEdgeToEdge()
         getTime()
+        //showSimpleNotificationOpenActivity(this@MainActivity,102,123f,456f)
+        setPeriodicTimeWorkRequest()
+        checkPermissionsAndGetLocation()
 
 
         setContent {
             EcoAlertScreen(estado = vistaModelo.state)
         }
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                ChequeadorBackground.segundoPlano = false
+                //showSimpleNotificationOpenActivity(this@MainActivity,102,123f,456f)
 
-        // AUTOMATIZACIÓN: Disparamos la verificación de permisos y GPS apenas abre la app
+            }
 
-        setPeriodicTimeWorkRequest()
-        checkPermissionsAndGetLocation()
+            override fun onStop(owner: LifecycleOwner) {
+                if(isFinishing){
+
+                    WorkManager.getInstance(this@MainActivity).cancelUniqueWork("PM_CHECKER_WORKER_UNIQUE")
+                }
+                ChequeadorBackground.segundoPlano = true
+                //showSimpleNotificationOpenActivity(this@MainActivity,102,123f,456f)
+
+            }
+
+        })
+
     }
 
     private fun checkPermissionsAndGetLocation() {

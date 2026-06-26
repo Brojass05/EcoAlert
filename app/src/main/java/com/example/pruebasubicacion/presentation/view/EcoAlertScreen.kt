@@ -29,13 +29,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pruebasubicacion.data.model.ClimaEstado
 import com.example.pruebasubicacion.presentation.ui.notifications.NotificationButton
+import com.example.pruebasubicacion.util.sumarHorasUtc
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 // --- Paleta de Colores Suavizada ---
 val EcoGreen = Color(0xFF2D9CDB) // Azul suave para la base si no hay riesgo
-val EcoBrandGreen = Color(0xFF109D48) 
+//val EcoBrandGreen = Color(0xFF109D48)
+val EcoBrandGreen = Color(0xFF0837A9)
 
 // Escala ICA con tonalidades menos brillantes (más pasteles/mates)
 val ColorIcaBueno = Color(0xFF52C41A)
@@ -79,7 +81,7 @@ fun EcoAlertScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     var showNotifications by remember { mutableStateOf(false) }
 
-    val currentGradient = Brush.verticalGradient(listOf(EcoBrandGreen, Color(0xFF0C8A3D)))
+    val currentGradient = Brush.verticalGradient(listOf(EcoBrandGreen, Color(0xFF0837A9)))
 
     CompositionLocalProvider(LocalContentColor provides textColor) {
         Scaffold(
@@ -189,6 +191,7 @@ fun TabItemMinimal(title: String, icon: ImageVector, isSelected: Boolean, onClic
 @Composable
 fun ConditionsCardMinimal(estado: ClimaEstado) {
     val pm25 = estado.clima?.hourly?.pm25?.firstOrNull() ?: 0f
+
     val risk = getRiskInfo(pm25)
     val isLightBg = risk.color == ColorIcaModerado
     val contentColor = if (isLightBg) Color.Black else Color.White
@@ -220,11 +223,12 @@ fun ConditionsCardMinimal(estado: ClimaEstado) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 val hum = estado.clima?.hourly?.humidity?.firstOrNull() ?: 0f
                 val temp = estado.clima?.hourly?.temperature?.firstOrNull() ?: 0f
-                val co = estado.clima?.hourly?.carbonMonoxide?.firstOrNull() ?: 0f
+                var co = estado.clima?.hourly?.carbonMonoxide?.firstOrNull() ?: 0f
+                co /= 100
 
                 IndicatorSmall(Icons.Outlined.WaterDrop, "Humedad", "${hum.toInt()}%", contentColor, Modifier.weight(1f))
                 IndicatorSmall(Icons.Outlined.Thermostat, "Temp.", "${temp.toInt()}°C", contentColor, Modifier.weight(1f))
-                IndicatorSmall(Icons.Outlined.Air, "CO", "${co.toInt()}", contentColor, Modifier.weight(1f))
+                IndicatorSmall(Icons.Outlined.Air, "CO", "${co.toInt()}%", contentColor, Modifier.weight(1f))
             }
         }
     }
@@ -251,7 +255,11 @@ fun HourlyForecast24h(estado: ClimaEstado, cardBg: Color, textColor: Color) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 // Segmentado exactamente por las próximas 24 horas desde ahora
                 val currentHour = LocalDateTime.now().hour
-                val data = clima.hourly.time.zip(clima.hourly.pm25 ?: emptyList()).drop(currentHour).take(24)
+                val horas = sumarHorasUtc(clima.hourly.time, currentHour)
+                //val data = clima.hourly.time.zip(clima.hourly.pm25 ?: emptyList()).drop(currentHour).take(24)
+                val data = horas.zip(clima.hourly.pm25 ?: emptyList()).take(24)
+                //val data = clima.hourly.time.zip(clima.hourly.pm25 ?: emptyList()).take(24)
+
                 items(data) { (time, pm) ->
                     val icon = getRiskIconForPM25(pm)
                     val risk = getRiskInfo(pm)
