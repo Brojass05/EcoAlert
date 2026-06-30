@@ -49,7 +49,8 @@ class PmCheckerWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(
                 showSimpleNotificationOpenActivity(
                     context = appContext,
                     newPm = newPm,
-                    lastPm = lastPm
+                    lastPm = lastPm,
+                    userPreferences = userPreferences
                 )
 
                 Result.success()

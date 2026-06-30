@@ -2,31 +2,23 @@ package com.example.pruebasubicacion.presentation.ui.notifications
 
 import android.Manifest
 import android.R
-import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.example.pruebasubicacion.data.UserPreferences
 import com.example.pruebasubicacion.MainActivity
 import com.example.pruebasubicacion.util.ChequeadorBackground
-
-
 val TAG = "NotificationManager"
 
-
-
-
-
-
-fun showSimpleNotification(context: Context,id: Int = 111, titulo: String = "Notificacion",mensaje: String) {
+suspend fun showSimpleNotification(
+    context: Context, id: Int = 111,
+    titulo: String = "Notificacion", mensaje: String,
+    idNoti:String = "n1", userPreferences: UserPreferences) {
     val builder = NotificationCompat.Builder(context, "CHANNEL_ID_EJEMPLO")
         .setSmallIcon(R.drawable.ic_dialog_info) // Mandatory icon
         .setContentTitle(titulo)
@@ -44,12 +36,15 @@ fun showSimpleNotification(context: Context,id: Int = 111, titulo: String = "Not
             Log.e("Notification", "Security error: missing permission", e)
         }
     }
+    userPreferences.saveLastSetNoti(idNoti)
+
 }
 
 
-fun showSimpleNotificationOpenActivity(
+suspend fun showSimpleNotificationOpenActivity(
     context: Context, notId: Int = 102,
-    newPm: Float, lastPm: Float?
+    newPm: Float, lastPm: Float?,
+    userPreferences: UserPreferences // Pasamos las preferencias para poder guardar
 ) {
     Log.i("Notification", "New PM: $newPm, Last PM: $lastPm")
     val lastPM = lastPm ?: return
@@ -70,11 +65,15 @@ fun showSimpleNotificationOpenActivity(
         Log.i("DebugTag","Si estas en segundo plano")
         if(newPm>lastPM){
             notificacionSubida(builder,pendingIntent,newPm,lastPm)
+            userPreferences.saveLastSetNoti("n1")
+
         }else if(newPm<lastPM){
             notificacionBajada(builder,pendingIntent,newPm,lastPm)
+            userPreferences.saveLastSetNoti("n2")
         }else {
             //notificacionNoCambioSinContenido()
             //notificacionNoCambio(builder,pendingIntent,newPm,lastPm)
+            userPreferences.saveLastSetNoti("n3")
             return
         }
 
@@ -89,7 +88,7 @@ fun showSimpleNotificationOpenActivity(
             Manifest.permission.POST_NOTIFICATIONS
         ) == PackageManager.PERMISSION_GRANTED
     ) {
-        NotificationManagerCompat.from(context).notify(102, builder.build())
+        NotificationManagerCompat.from(context).notify(notId, builder.build())
     }
 }
 fun notificacionSubida(builder: NotificationCompat.Builder, pendingIntent: PendingIntent, newPm: Float, lastPm: Float?) {
@@ -103,7 +102,7 @@ fun notificacionSubida(builder: NotificationCompat.Builder, pendingIntent: Pendi
 fun notificacionBajada(builder: NotificationCompat.Builder, pendingIntent: PendingIntent, newPm: Float, lastPm: Float?) {
     builder.setSmallIcon(R.drawable.ic_dialog_info)
         .setContentTitle("Informacion")
-        .setContentText("El nivel de contaminacion ha bajado ")
+        .setContentText("El nivel de contaminacion ha bajado")
         //.setContentText("Bajo \nNueva: $newPm \nAnterior: $lastPm")
         .setContentIntent(pendingIntent) // <--- Link the click with the destination
         .setAutoCancel(true) // Deleted when touched
@@ -120,6 +119,13 @@ fun notificacionNoCambioSinContenido( ) {
     Log.i(TAG, "No han habido cambios")
 
 }
+
+// Esta función ya no es necesaria si llamamos directamente a userPreferences
+// Pero si la quieres mantener, debería ser suspend y recibir las dependencias:
+suspend fun saveLastSetNoti(userPreferences: UserPreferences, id: String) {
+    userPreferences.saveLastSetNoti(id)
+}
+
 
 
 

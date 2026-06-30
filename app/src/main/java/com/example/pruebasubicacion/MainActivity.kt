@@ -17,43 +17,44 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.annotation.RequiresPermission
+
 import androidx.core.app.ActivityCompat
+
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.ListenableWorker
+
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.example.pruebasubicacion.presentation.ui.notifications.showSimpleNotificationOpenActivity
+
 
 import com.example.pruebasubicacion.util.ChequeadorBackground
 
 import com.example.pruebasubicacion.presentation.view.EcoAlertScreen
 import com.example.pruebasubicacion.presentation.viewmodel.UbicacionViewModel
-import com.example.pruebasubicacion.util.getTime
+
 import com.example.pruebasubicacion.workers.PmCheckerWorker
-
-import com.example.pruebasubicacion.data.ClimaRepository
-
 
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.delay
+import com.example.pruebasubicacion.data.UserPreferences
+import com.example.pruebasubicacion.data.dataStore
+
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import okio.IOException
+
 
 import java.util.concurrent.TimeUnit
 
 
 class MainActivity : ComponentActivity() {
+
 
     // Instancia del ViewModel utilizando el delegado oficial de Android
     private val vistaModelo: UbicacionViewModel by viewModels { UbicacionViewModel.Factory }
@@ -85,7 +86,7 @@ class MainActivity : ComponentActivity() {
         createNotificationChannel(this)
         enableEdgeToEdge()
         //getTime()
-        //showSimpleNotificationOpenActivity(this@MainActivity,102,123f,456f)
+        //showSimpleNotificationOpenActivity(this@MainActivity,102,123f,321f)
         setPeriodicTimeWorkRequest()
         checkPermissionsAndGetLocation()
 
@@ -101,13 +102,19 @@ class MainActivity : ComponentActivity() {
             override fun onStop(owner: LifecycleOwner) {
 
                 if(isFinishing){
+                    val userPreference = UserPreferences(applicationContext.dataStore)
+                    lifecycleScope.launch {
+                        userPreference.resetLastSetNoti()
+                    }
                     WorkManager.getInstance(this@MainActivity).cancelUniqueWork("PM_CHECKER_WORKER_UNIQUE")
+   
                 }
                 
                 ChequeadorBackground.segundoPlano = true
             }
         })
     }
+  
 
     private fun checkPermissionsAndGetLocation() {
         val permissionsToRequest = mutableListOf<String>()

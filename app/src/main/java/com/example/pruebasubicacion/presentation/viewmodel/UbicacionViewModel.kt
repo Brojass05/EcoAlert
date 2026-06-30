@@ -22,7 +22,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 
 
 class UbicacionViewModel(private val userPreferences: UserPreferences): ViewModel() {
-    val lastPmState = userPreferences.lastPmFlow.asLiveData()
+
     
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

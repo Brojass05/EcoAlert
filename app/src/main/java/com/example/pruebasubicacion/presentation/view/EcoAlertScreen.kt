@@ -47,11 +47,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,6 +73,9 @@ import com.example.pruebasubicacion.R
 import com.example.pruebasubicacion.data.model.ClimaEstado
 import com.example.pruebasubicacion.presentation.ui.notifications.showSimpleNotification
 import com.example.pruebasubicacion.util.sumarHorasUtc
+import com.example.pruebasubicacion.data.UserPreferences
+import com.example.pruebasubicacion.data.dataStore
+import kotlinx.coroutines.flow.first
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -200,7 +207,7 @@ fun EcoAlertScreen(
                         }
 
                         // Mapa Interactivo
-                        InteractivePollutionMap(estado.clima?.latitude, estado.clima?.longitude)
+                        //InteractivePollutionMap(estado.clima?.latitude, estado.clima?.longitude)
                     }
                 }
 
@@ -218,6 +225,9 @@ fun HeaderSection(
     onTabSelected: (Int) -> Unit,
     onNotificationClick: () -> Unit
 ) {
+    val userPreferences = remember { UserPreferences(context.applicationContext.dataStore) }
+    val scope = rememberCoroutineScope()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -253,19 +263,25 @@ fun HeaderSection(
                         Icon(Icons.Outlined.Notifications, "Notif", tint = Color.White)
                     }
                     IconButton(onClick = {
-                        showSimpleNotification(
-                            context,
-                            id = 101,
-                            "Alerta!!!",
-                            "El nivel de contaminacion ha subido \nTen cuidado si vas a salir"
-                        )
-                        showSimpleNotification(
-                            context,
-                            201,
-                            "Informacion",
-                            "El nivel de contaminacion ha bajado"
-                        )
-                        showSimpleNotification(context, 301, "Tercera notificacion", "")
+                        scope.launch {
+                            showSimpleNotification(
+                                context,
+                                id = 101,
+                                titulo = "Alerta!!!",
+                                mensaje = "El nivel de contaminacion ha subido \nTen cuidado si vas a salir",
+                                idNoti = "n1",
+                                userPreferences = userPreferences
+                            )
+                            showSimpleNotification(
+                                context,
+                                id = 201,
+                                titulo = "Información",
+                                mensaje = "El nivel de contaminacion ha bajado",
+                                idNoti = "n2",
+                                userPreferences = userPreferences
+                            )
+                        }
+
                     }, modifier = Modifier.background(Color.White.copy(0.15f), CircleShape)) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_eco1_stats), // Ahora sí existe en drawable
@@ -722,7 +738,14 @@ fun CriticalAlertCard(estado: ClimaEstado) {
 
 @Composable
 fun NotificationsView(onClose: () -> Unit) {
-    val isDark = isSystemInDarkTheme()
+    val context = LocalContext.current
+    // 1. Cargamos las preferencias (se mantiene mientras la ventana esté abierta)
+    val userPreferences = remember { UserPreferences(context.applicationContext.dataStore) }
+
+    // 2. collectAsState garantiza que CADA VEZ que abras la ventana,
+    // se obtenga lo último que haya en el disco (DataStore).
+    val sendedNotifications by userPreferences.sendedNotificationFlow.collectAsState(initial = emptyList())
+
     Column(
         Modifier
             .fillMaxWidth()
@@ -738,8 +761,30 @@ fun NotificationsView(onClose: () -> Unit) {
             IconButton(onClick = onClose) { Icon(Icons.Default.Close, null) }
         }
 
-        NotificationItemMinimal("Alerta Local", "Niveles de PM2.5 elevados en tu zona.")
-
+        // 3. Si la lista obtenida está vacía, mostramos un mensaje informativo
+        if (sendedNotifications.isEmpty()) {
+            Box(Modifier.fillMaxWidth().padding(top = 40.dp), contentAlignment = Alignment.Center) {
+                Text("No tienes notificaciones nuevas", color = EcoTextMuted)
+            }
+        } else {
+            // 4. Si hay contenido, iteramos.
+            for (id in sendedNotifications) {
+                when (id) {
+                    "n1" -> NotificationItemMinimal(
+                        "Alerta!!!",
+                        "El nivel de contaminacion ha subido \nTen cuidado si vas a salir"
+                    )
+                    "n2" -> NotificationItemMinimal(
+                        "Información",
+                        "El nivel de contaminación ha bajado"
+                    )
+                    "n3" -> NotificationItemMinimal(
+                        "Información",
+                        "El nivel de contaminación es el mismo"
+                    )
+                }
+            }
+        }
     }
 }
 
