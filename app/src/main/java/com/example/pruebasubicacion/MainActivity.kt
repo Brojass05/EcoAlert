@@ -17,6 +17,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -24,9 +25,11 @@ import androidx.lifecycle.ProcessLifecycleOwner
 
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ListenableWorker
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.pruebasubicacion.presentation.ui.notifications.showSimpleNotificationOpenActivity
 
 import com.example.pruebasubicacion.util.ChequeadorBackground
 
@@ -35,9 +38,17 @@ import com.example.pruebasubicacion.presentation.viewmodel.UbicacionViewModel
 import com.example.pruebasubicacion.util.getTime
 import com.example.pruebasubicacion.workers.PmCheckerWorker
 
+import com.example.pruebasubicacion.data.ClimaRepository
+
+
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import okio.IOException
 
 import java.util.concurrent.TimeUnit
 
@@ -73,7 +84,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         createNotificationChannel(this)
         enableEdgeToEdge()
-        getTime()
+        //getTime()
         //showSimpleNotificationOpenActivity(this@MainActivity,102,123f,456f)
         setPeriodicTimeWorkRequest()
         checkPermissionsAndGetLocation()
@@ -85,22 +96,17 @@ class MainActivity : ComponentActivity() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
                 ChequeadorBackground.segundoPlano = false
-                //showSimpleNotificationOpenActivity(this@MainActivity,102,123f,456f)
-
             }
 
             override fun onStop(owner: LifecycleOwner) {
-                if(isFinishing){
 
+                if(isFinishing){
                     WorkManager.getInstance(this@MainActivity).cancelUniqueWork("PM_CHECKER_WORKER_UNIQUE")
                 }
+                
                 ChequeadorBackground.segundoPlano = true
-                //showSimpleNotificationOpenActivity(this@MainActivity,102,123f,456f)
-
             }
-
         })
-
     }
 
     private fun checkPermissionsAndGetLocation() {
@@ -124,9 +130,7 @@ class MainActivity : ComponentActivity() {
         if (permissionsToRequest.isNotEmpty()) {
             requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
-            // Si ya tenemos los frontales, verificamos el de segundo plano (Background)
-            // En Android 11+ (API 30), este permiso DEBE pedirse por separado de los frontales.
-            // Nota: ACCESS_BACKGROUND_LOCATION requiere API 29+ (que es nuestro minSdk)
+
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
             } else {

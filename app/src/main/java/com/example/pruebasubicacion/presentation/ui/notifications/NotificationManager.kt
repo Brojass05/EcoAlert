@@ -22,55 +22,22 @@ import com.example.pruebasubicacion.util.ChequeadorBackground
 val TAG = "NotificationManager"
 
 
-@Composable
-fun NotificationButton(nivelPm: Float) {
-    val context = LocalContext.current
-    // 1. We configure the permission "requester"
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            // The user said yes, we launch the notification
-            showSimpleNotification(context)
-        } else {
-            // The user said no, you could show an informative Toast
 
-        }
-    }
 
-}
 
-fun showSimpleNotification(context: Context) {
+
+fun showSimpleNotification(context: Context,id: Int = 111, titulo: String = "Notificacion",mensaje: String) {
     val builder = NotificationCompat.Builder(context, "CHANNEL_ID_EJEMPLO")
         .setSmallIcon(R.drawable.ic_dialog_info) // Mandatory icon
-        .setContentTitle("Hello!")
-        .setContentText("This is a notification from Jetpack Compose")
+        .setContentTitle(titulo)
+        .setContentText(mensaje)
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setAutoCancel(true) // Closes when touched
     with(NotificationManagerCompat.from(context)) {
         // ID 101 is unique to this notification (you can use it to update it later)
         try {
             with(NotificationManagerCompat.from(context)) {
-                notify(101, builder.build())
-            }
-        } catch (e: SecurityException) {
-            // Handle the error: log it or notify the user
-            Log.e("Notification", "Security error: missing permission", e)
-        }
-    }
-}
-fun showSimpleDebugNotification(context: Context, message: String) {
-    val builder = NotificationCompat.Builder(context, "CHANNEL_ID_EJEMPLO")
-        .setSmallIcon(R.drawable.ic_dialog_info) // Mandatory icon
-        .setContentTitle("DebugNotification")
-        .setContentText(message)
-        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-        .setAutoCancel(true) // Closes when touched
-    with(NotificationManagerCompat.from(context)) {
-        // ID 101 is unique to this notification (you can use it to update it later)
-        try {
-            with(NotificationManagerCompat.from(context)) {
-                notify(100, builder.build())
+                notify(id, builder.build())
             }
         } catch (e: SecurityException) {
             // Handle the error: log it or notify the user
@@ -79,7 +46,7 @@ fun showSimpleDebugNotification(context: Context, message: String) {
     }
 }
 
-@SuppressLint("SuspiciousIndentation")
+
 fun showSimpleNotificationOpenActivity(
     context: Context, notId: Int = 102,
     newPm: Float, lastPm: Float?
@@ -105,10 +72,10 @@ fun showSimpleNotificationOpenActivity(
             notificacionSubida(builder,pendingIntent,newPm,lastPm)
         }else if(newPm<lastPM){
             notificacionBajada(builder,pendingIntent,newPm,lastPm)
-        }else if(newPm==lastPm){
+        }else {
             //notificacionNoCambioSinContenido()
-            notificacionNoCambio(builder,pendingIntent,newPm,lastPm)
-            //return
+            //notificacionNoCambio(builder,pendingIntent,newPm,lastPm)
+            return
         }
 
     }else{
@@ -128,24 +95,24 @@ fun showSimpleNotificationOpenActivity(
 fun notificacionSubida(builder: NotificationCompat.Builder, pendingIntent: PendingIntent, newPm: Float, lastPm: Float?) {
     builder.setSmallIcon(R.drawable.ic_dialog_alert)
         .setContentTitle("Alerta!!!")
-        //.setContentText("El nivel de contaminacion ha subido \nTen cuidado si vas a salir \nNueva: $newPm \nAnterior: $lastPm")
-        .setContentText("Subio \nNueva: $newPm \nAnterior: $lastPm")
+        .setContentText("El nivel de contaminacion ha subido \nTen cuidado si vas a salir")
+        //.setContentText("Subio \nNueva: $newPm \nAnterior: $lastPm")
         .setContentIntent(pendingIntent) // <--- Link the click with the destination
         .setAutoCancel(true) // Deleted when touched
 }
 fun notificacionBajada(builder: NotificationCompat.Builder, pendingIntent: PendingIntent, newPm: Float, lastPm: Float?) {
     builder.setSmallIcon(R.drawable.ic_dialog_info)
         .setContentTitle("Informacion")
-        //.setContentText("El nivel de contaminacion ha bajado \nNueva: $newPm \nAnterior: $lastPm")
-        .setContentText("Bajo \nNueva: $newPm \nAnterior: $lastPm")
+        .setContentText("El nivel de contaminacion ha bajado ")
+        //.setContentText("Bajo \nNueva: $newPm \nAnterior: $lastPm")
         .setContentIntent(pendingIntent) // <--- Link the click with the destination
         .setAutoCancel(true) // Deleted when touched
 }
 fun notificacionNoCambio(builder: NotificationCompat.Builder, pendingIntent:PendingIntent, newPm: Float, lastPm: Float ) {
     builder.setSmallIcon(R.drawable.ic_dialog_email)
         .setContentTitle("Informacion")
-        //.setContentText("El nivel de contaminacion no han habido cambios \nNueva: $newPm \nAnterior: $lastPm")
-        .setContentText("No Cambio \nNueva: $newPm \nAnterior: $lastPm")
+        .setContentText("El nivel de contaminacion no han habido cambios")
+        //.setContentText("No Cambio \nNueva: $newPm \nAnterior: $lastPm")
         .setContentIntent(pendingIntent) // <--- Link the click with the destination
         .setAutoCancel(true) // Deleted when touched
 }

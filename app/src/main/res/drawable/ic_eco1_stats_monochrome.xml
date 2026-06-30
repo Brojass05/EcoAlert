@@ -1,0 +1,41 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <group android:scaleX="0.51"
+      android:scaleY="0.51"
+      android:translateX="5.88"
+      android:translateY="5.88">
+      <!-- Tronco del árbol -->
+      <path
+          android:pathData="M7,18L7,15"
+          android:strokeColor="#FFFFFF"
+          android:strokeWidth="1.2"
+          android:strokeLineCap="round"/>
+      <!-- Copa del árbol (forma de hoja) -->
+      <path
+          android:pathData="M7,15C7,15 4,15 4,12C4,9 7,8 7,8C7,8 10,9 10,12C10,15 7,15 7,15Z"
+          android:strokeColor="#FFFFFF"
+          android:strokeWidth="1.2"
+          android:strokeLineJoin="round"/>
+      <!-- Línea de base -->
+      <path
+          android:pathData="M3,18H10"
+          android:strokeColor="#FFFFFF"
+          android:strokeWidth="1.2"
+          android:strokeLineCap="round"/>
+      <!-- Nube -->
+      <path
+          android:pathData="M11.5,17.5H18.5C21,17.5 23,15.5 23,13C23,10.5 21,8.5 18.5,8.5C18.2,8.5 17.9,8.5 17.6,8.6C16.7,5.9 14.1,4 11,4C7.4,4 4.4,6.6 4.1,10"
+          android:strokeColor="#FFFFFF"
+          android:strokeWidth="1.2"
+          android:strokeLineCap="round"/>
+      <!-- Puntos de la nube -->
+      <path
+          android:pathData="M14,13.5H14.1M17,13.5H17.1M20,13.5H20.1"
+          android:strokeColor="#FFFFFF"
+          android:strokeWidth="1.5"
+          android:strokeLineCap="round"/>
+  </group>
+</vector>
