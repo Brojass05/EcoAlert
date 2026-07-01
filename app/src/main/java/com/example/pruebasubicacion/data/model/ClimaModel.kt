@@ -21,6 +21,7 @@ data class HourlyData(
     @SerializedName("relative_humidity_2m") val humidity: List<Float>?,
     @SerializedName("temperature_2m") val temperature: List<Float>?
 )
+
 data class ClimaModel2(
     val latitude: Double,
     val longitude: Double,

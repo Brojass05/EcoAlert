@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.example.pruebasubicacion.data.model.ClimaEstado
 import com.example.pruebasubicacion.data.model.ClimaModel
 import com.example.pruebasubicacion.data.model.HourlyData
+import com.example.pruebasubicacion.presentation.ui.notifications.TAG
 import com.example.pruebasubicacion.util.Log // 👈 Mantenemos únicamente tu Log personalizado
 
 @Composable
@@ -52,7 +53,7 @@ fun UbicacionView(
             )
 
             // Control de flujo según el estado de la pantalla
-            // Control de flujo según el estado de la pantalla
+
             when {
                 estado.estaCargando -> {
                     Box(
@@ -123,7 +124,7 @@ fun ClimaContent(clima: ClimaModel, nombreUbicacion: String) {
 
                 // 👈 CORREGIDO: Se adapta para usar tu función Log(mensaje) personalizada
                 val msg = "Lat: ${clima.latitude}, Lon: ${clima.longitude} | Lugar: $nombreUbicacion"
-                Log(mensaje = msg)
+                Log("DebugTag",mensaje = msg)
 
                 Spacer(Modifier.height(24.dp))
 
@@ -234,6 +235,7 @@ fun UbicacionViewPreview() {
             ozone = null,
             sulphurDioxide = null,
             carbonMonoxide = null,
+            carbonDioxide = null,
             uvIndex = null,
             humidity = null,
             temperature = null

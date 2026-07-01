@@ -1,6 +1,9 @@
 package com.example.pruebasubicacion.presentation.view
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -45,6 +48,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -61,6 +65,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.colorspace.ColorSpace
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -75,6 +80,8 @@ import com.example.pruebasubicacion.presentation.ui.notifications.showSimpleNoti
 import com.example.pruebasubicacion.util.sumarHorasUtc
 import com.example.pruebasubicacion.data.UserPreferences
 import com.example.pruebasubicacion.data.dataStore
+import com.example.pruebasubicacion.presentation.ui.notifications.TAG
+import com.example.pruebasubicacion.util.Log
 import kotlinx.coroutines.flow.first
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -148,6 +155,7 @@ fun getRiskInfo(pm25: Float): RiskInfo {
 fun EcoAlertScreen(
     estado: ClimaEstado = ClimaEstado()
 ) {
+
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
     val backgroundColor = if (isDark) Color(0xFF0F172A) else Color(0xFFF8FAFC)
@@ -354,26 +362,25 @@ fun TabItemMinimal(
     }
 }
 
+
 @Composable
 fun ConditionsCardMinimal(estado: ClimaEstado) {
-    val pm25 =
-        estado.clima?.hourly?.pm25?.firstOrNull() ?: 0f // Default obtiene valor automaticamente
-    //val pm25 = 10f // Valor Bueno
-    //val pm25 = 35f // Valor Mala
-    //val pm25 = 55f // Valor Riesgosa
-    //val pm25 = 150f // Valor Insalubre
-    //val pm25 = 250f // Valor Muy dañino
 
-
+    var pm25 = estado.clima?.hourly?.pm25?.firstOrNull() ?: 0f // Default obtiene valor automaticamente
     val risk = getRiskInfo(pm25)
     val contentColor = Color.White
+    var cardColor by remember(risk.color) { mutableStateOf(risk.color) }
+    var categoria = ""
+    var mensaje = ""
+
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = risk.color)
+        colors = CardDefaults.cardColors(containerColor = cardColor)
     ) {
         Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+
             // 1. UBICACIÓN
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -393,13 +400,40 @@ fun ConditionsCardMinimal(estado: ClimaEstado) {
 
             // 2. NIVEL PM2.5 (Más grande)
             Column {
-                Text(
+                val listaPm25 = listOf<Float>(pm25,10f,35f,55f,150f,250f,300f)
+                var currentIndex by remember { mutableStateOf(0) }
+
+                // Funcion de desarrollador exclusiva para presentacion
+                TextButton(
+                    onClick = {
+
+                        // Cycles through the list 0 -> 1 -> 2 -> 0 -> 1...
+                        currentIndex = (currentIndex + 1) % listaPm25.size
+                        pm25 = listaPm25[currentIndex]
+                        mensaje = getRiskInfo(pm25).message
+                        categoria = getRiskInfo(pm25).category
+                        cardColor = getRiskInfo(pm25).color
+
+
+
+                    }
+                ) {
+                    Text(text = "${listaPm25[currentIndex]} µg/m³",
+                        color = contentColor,
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Black)
+                }
+
+                // Texto Original
+                /*Text(
                     "${pm25.toInt()} µg/m³",
                     color = contentColor,
                     fontSize = 36.sp,
                     fontWeight = FontWeight.Black
-                )
+                )*/
+
                 Text(
+
                     risk.category.uppercase(),
                     color = contentColor.copy(0.85f),
                     fontSize = 14.sp,
@@ -411,7 +445,7 @@ fun ConditionsCardMinimal(estado: ClimaEstado) {
 
             // 3. MENSAJE (Tamaño normal)
             Text(
-                risk.message,
+                risk2.message,
                 color = contentColor.copy(0.9f),
                 fontSize = 14.sp,
                 lineHeight = 20.sp
@@ -422,7 +456,8 @@ fun ConditionsCardMinimal(estado: ClimaEstado) {
                 val hum = estado.clima?.hourly?.humidity?.firstOrNull() ?: 0f
                 val temp = estado.clima?.hourly?.temperature?.firstOrNull() ?: 0f
                 var co2 = estado.clima?.hourly?.carbonDioxide?.firstOrNull() ?: 0f
-                co /= 100
+                co2 /= 10
+
 
                 IndicatorSmall(
                     Icons.Outlined.WaterDrop,
@@ -447,7 +482,9 @@ fun ConditionsCardMinimal(estado: ClimaEstado) {
                 )
             }
         }
+
     }
+
 }
 
 @Composable
@@ -763,7 +800,9 @@ fun NotificationsView(onClose: () -> Unit) {
 
         // 3. Si la lista obtenida está vacía, mostramos un mensaje informativo
         if (sendedNotifications.isEmpty()) {
-            Box(Modifier.fillMaxWidth().padding(top = 40.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier
+                .fillMaxWidth()
+                .padding(top = 40.dp), contentAlignment = Alignment.Center) {
                 Text("No tienes notificaciones nuevas", color = EcoTextMuted)
             }
         } else {
