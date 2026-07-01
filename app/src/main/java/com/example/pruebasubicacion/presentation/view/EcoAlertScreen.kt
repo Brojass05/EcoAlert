@@ -421,7 +421,7 @@ fun ConditionsCardMinimal(estado: ClimaEstado) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 val hum = estado.clima?.hourly?.humidity?.firstOrNull() ?: 0f
                 val temp = estado.clima?.hourly?.temperature?.firstOrNull() ?: 0f
-                var co = estado.clima?.hourly?.carbonMonoxide?.firstOrNull() ?: 0f
+                var co2 = estado.clima?.hourly?.carbonDioxide?.firstOrNull() ?: 0f
                 co /= 100
 
                 IndicatorSmall(
@@ -440,8 +440,8 @@ fun ConditionsCardMinimal(estado: ClimaEstado) {
                 )
                 IndicatorSmall(
                     Icons.Outlined.Air,
-                    "CO",
-                    "${co.toInt()}%",
+                    "CO\u2082",
+                    "${co2.toInt()}%",
                     contentColor,
                     Modifier.weight(1f)
                 )
