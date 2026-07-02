@@ -1,9 +1,6 @@
 package com.example.pruebasubicacion.presentation.view
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -51,7 +48,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -65,7 +61,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.colorspace.ColorSpace
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -80,9 +75,6 @@ import com.example.pruebasubicacion.presentation.ui.notifications.showSimpleNoti
 import com.example.pruebasubicacion.util.sumarHorasUtc
 import com.example.pruebasubicacion.data.UserPreferences
 import com.example.pruebasubicacion.data.dataStore
-import com.example.pruebasubicacion.presentation.ui.notifications.TAG
-import com.example.pruebasubicacion.util.Log
-import kotlinx.coroutines.flow.first
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -370,8 +362,16 @@ fun ConditionsCardMinimal(estado: ClimaEstado) {
     val risk = getRiskInfo(pm25)
     val contentColor = Color.White
     var cardColor by remember(risk.color) { mutableStateOf(risk.color) }
-    var categoria = ""
-    var mensaje = ""
+    val listaPm25 = listOf<Float>(pm25,10f,35f,55f,150f,250f,300f)
+    var currentIndex by remember { mutableStateOf(0) }
+    val riskMessage = remember(currentIndex, risk) {
+        val pm25Actual = listaPm25[currentIndex]
+        getRiskInfo(pm25Actual).message
+    }
+    val riskCategory = remember(currentIndex, risk) {
+        val pm25Actual = listaPm25[currentIndex]
+        getRiskInfo(pm25Actual).category
+    }
 
 
     Card(
@@ -400,8 +400,8 @@ fun ConditionsCardMinimal(estado: ClimaEstado) {
 
             // 2. NIVEL PM2.5 (Más grande)
             Column {
-                val listaPm25 = listOf<Float>(pm25,10f,35f,55f,150f,250f,300f)
-                var currentIndex by remember { mutableStateOf(0) }
+
+
 
                 // Funcion de desarrollador exclusiva para presentacion
                 TextButton(
@@ -410,9 +410,8 @@ fun ConditionsCardMinimal(estado: ClimaEstado) {
                         // Cycles through the list 0 -> 1 -> 2 -> 0 -> 1...
                         currentIndex = (currentIndex + 1) % listaPm25.size
                         pm25 = listaPm25[currentIndex]
-                        mensaje = getRiskInfo(pm25).message
-                        categoria = getRiskInfo(pm25).category
                         cardColor = getRiskInfo(pm25).color
+
 
 
 
@@ -431,25 +430,39 @@ fun ConditionsCardMinimal(estado: ClimaEstado) {
                     fontSize = 36.sp,
                     fontWeight = FontWeight.Black
                 )*/
-
+                /* // Texto Original de categoria
                 Text(
-
                     risk.category.uppercase(),
                     color = contentColor.copy(0.85f),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
+                )*/
+                Text(
+                    riskCategory.uppercase(),
+                    color = contentColor.copy(0.85f),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
                 )
+
             }
 
 
-            // 3. MENSAJE (Tamaño normal)
+
             Text(
-                risk2.message,
+                text = riskMessage,
                 color = contentColor.copy(0.9f),
                 fontSize = 14.sp,
                 lineHeight = 20.sp
             )
+            /* // Linea original para mostrar mensajes
+            Text(
+                risk.message,
+                color = contentColor.copy(0.9f),
+                fontSize = 14.sp,
+                lineHeight = 20.sp
+            )*/
 
             // Indicadores inferiores
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -580,8 +593,8 @@ fun WeeklyForecast(estado: ClimaEstado, cardBg: Color, textColor: Color) {
                 )
                 val label = if (i == 0) "Hoy" else date.format(
                     DateTimeFormatter.ofPattern(
-                        "EEE",
-                        Locale("es")
+                        "EEE"
+
                     )
                 )
                 val risk = getRiskInfo(avg)
