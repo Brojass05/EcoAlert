@@ -200,15 +200,12 @@ class MainActivity : ComponentActivity() {
 }
 
 private fun createNotificationChannel(context: Context) {
-    // Solo necesario para API 26+ (Nuestro minSdk es 29, así que siempre se ejecuta)
     val name = "My App Notifications"
     val descriptionText = "This channel is used for general alerts"
     val importance = NotificationManager.IMPORTANCE_DEFAULT
-    // THE ID MUST BE THE SAME AS YOU USE IN THE BUILDER ("CHANNEL_ID_EJEMPLO")
     val channel = NotificationChannel("CHANNEL_ID_EJEMPLO", name, importance).apply {
         description = descriptionText
     }
-    // Register the channel with the system
     val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.createNotificationChannel(channel)
