@@ -22,13 +22,3 @@ data class HourlyData(
     @SerializedName("temperature_2m") val temperature: List<Float>?
 )
 
-data class ClimaModel2(
-    val latitude: Double,
-    val longitude: Double,
-    val hourly: HourlyData2
-)
-
-data class HourlyData2(
-    val time: List<String>,
-    @SerializedName("pm2_5") val pm25: List<Float>?
-)

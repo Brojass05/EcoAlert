@@ -13,13 +13,13 @@ interface ServicioAPI {
         @Query("latitude") lat: Double,
         @Query("longitude") lon: Double,
         @Query("hourly") hourly: String = "pm2_5," +
-                                                  "pm10," +
-                                                  "nitrogen_dioxide," +
-                                                  "ozone," +
-                                                  "sulphur_dioxide," +
-                                                  "carbon_monoxide," +
-                                                  "carbon_dioxide," +
-                                                  "uv_index"
+                                          "pm10," +
+                                          "nitrogen_dioxide," +
+                                          "ozone," +
+                                          "sulphur_dioxide," +
+                                          "carbon_monoxide," +
+                                          "carbon_dioxide," +
+                                          "uv_index"
     ): ClimaModel
 
     companion object {

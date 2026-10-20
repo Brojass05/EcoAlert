@@ -7,7 +7,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 
-import android.os.Build
 import android.os.Bundle
 
 import android.widget.Toast
@@ -128,11 +127,11 @@ class MainActivity : ComponentActivity() {
             permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION)
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
-            }
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
         }
+
 
         if (permissionsToRequest.isNotEmpty()) {
             requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())

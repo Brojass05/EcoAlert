@@ -4,6 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import com.example.pruebasubicacion.data.model.ClimaEstado
+import com.example.pruebasubicacion.data.model.ClimaModel
+import com.example.pruebasubicacion.data.model.HourlyData
 import com.google.android.gms.location.FusedLocationProviderClient
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
@@ -63,7 +66,7 @@ fun sumarHoras(listaHoras: List<String>, horasASumar: Int): List<String> {
                     .plusHours(horasASumarN)
                     .format(formatter)
             } catch (e2: Exception) {
-                horaStr // Devolvemos el original si todo falla
+                horaStr // Devolvemos el original si  falla
             }
         }
     }
@@ -73,3 +76,33 @@ fun sumarHoras(listaHoras: List<String>, horasASumar: Int): List<String> {
 fun sumarHorasUtc(listaHoras: List<String>, horasASumar: Int): List<String> {
     return sumarHoras(listaHoras, horasASumar)
 }
+
+// TODO: Generación de Informes y Recomendaciones Preventivas
+/*
+Criticas:
+Particulado Fino (PM2.5)
+Ozono (O3)
+Particulado Respirable (PM10)
+Indice UV (UV Index)
+Segun diagnostico alergico o entorno especifico
+Polenes
+Alder
+Birch
+Grass
+Mugwort
+Olive
+Ragweed
+Monoxido de carbono (CO), Dioxido de nitrogeno (NO2)
+tipicos en zonas urbanas y de alto trafico vehicular, usar en caso de estar en ciudad
+Baja relevancia
+Dioxido de carbono (CO2)
+Aerosol Optical Depth (AOD)
+Metano (CH4), Amoniaco (NH3)
+* */
+fun creaInforme(datosPorHora: HourlyData){
+    // TODO: Crear informe
+    Log("Boton Informe", "Creando informe")
+
+
+}
+

@@ -1,6 +1,7 @@
 package com.example.pruebasubicacion.presentation.view
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Air
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Dangerous
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -36,6 +38,7 @@ import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material.icons.outlined.WaterDrop
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,15 +72,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 import com.example.pruebasubicacion.R
 import com.example.pruebasubicacion.data.model.ClimaEstado
 import com.example.pruebasubicacion.presentation.ui.notifications.showSimpleNotification
 import com.example.pruebasubicacion.util.sumarHorasUtc
+import com.example.pruebasubicacion.util.creaInforme
 import com.example.pruebasubicacion.data.UserPreferences
 import com.example.pruebasubicacion.data.dataStore
+
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+
 
 // --- Paleta de Colores Suavizada ---
 val EcoGreen = Color(0xFF2D9CDB) // Azul suave para la base si no hay riesgo
@@ -157,6 +163,7 @@ fun EcoAlertScreen(
 
     var selectedTab by remember { mutableIntStateOf(0) }
     var showNotifications by remember { mutableStateOf(false) }
+    var showResume by remember { mutableStateOf(false) }
 
     val currentGradient = Brush.verticalGradient(listOf(EcoBrandGreen, Color(0xFF0837A9)))
 
@@ -176,12 +183,20 @@ fun EcoAlertScreen(
                     selectedTab = selectedTab,
                     currentGradient = currentGradient,
                     onTabSelected = { selectedTab = it },
-                    onNotificationClick = { showNotifications = true }
+                    onNotificationClick = { showNotifications = true },
+                    onResumeClick = { showResume = true },
+                    onClose = {
+                        showNotifications = false
+                        showResume = false
+                    }
                 )
 
                 if (showNotifications) {
                     NotificationsView(onClose = { showNotifications = false })
-                } else {
+                } else if(showResume){
+                    ResumeView(onClose = {showResume = false})
+                }
+                else {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -223,7 +238,9 @@ fun HeaderSection(
     selectedTab: Int,
     currentGradient: Brush,
     onTabSelected: (Int) -> Unit,
-    onNotificationClick: () -> Unit
+    onNotificationClick: () -> Unit,
+    onResumeClick: () -> Unit,
+    onClose: () -> Unit
 ) {
     val userPreferences = remember { UserPreferences(context.applicationContext.dataStore) }
     val scope = rememberCoroutineScope()
@@ -262,27 +279,10 @@ fun HeaderSection(
                     ) {
                         Icon(Icons.Outlined.Notifications, "Notif", tint = Color.White)
                     }
-                    IconButton(onClick = {
-                        scope.launch {
-                            showSimpleNotification(
-                                context,
-                                id = 101,
-                                titulo = "Alerta!!!",
-                                mensaje = "El nivel de contaminacion ha subido \nTen cuidado si vas a salir",
-                                idNoti = "n1",
-                                userPreferences = userPreferences
-                            )
-                            showSimpleNotification(
-                                context,
-                                id = 201,
-                                titulo = "Información",
-                                mensaje = "El nivel de contaminacion ha bajado",
-                                idNoti = "n2",
-                                userPreferences = userPreferences
-                            )
-                        }
-
-                    }, modifier = Modifier.background(Color.White.copy(0.15f), CircleShape)) {
+                    IconButton(
+                        onClick = { },
+                        modifier = Modifier.background(Color.White.copy(0.15f), CircleShape)
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_eco1_stats), // Ahora sí existe en drawable
                             contentDescription = "Stats",
@@ -290,8 +290,19 @@ fun HeaderSection(
                             modifier = Modifier.size(24.dp)
                         )
                     }
+                    IconButton(
+                        onClick = onResumeClick,
+                        modifier = Modifier.background(Color.White.copy(0.15f), CircleShape)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Build,
+                            contentDescription = "Menu",
+                            tint = Color.White
+                        )
+                    }
                 }
             }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -303,20 +314,27 @@ fun HeaderSection(
                     "Deportista",
                     Icons.AutoMirrored.Outlined.TrendingUp,
                     selectedTab == 0,
-                    { onTabSelected(0) },
+                    onClick = {
+                        onTabSelected(0)
+                        onClose()
+                    },
                     Modifier.weight(1f)
                 )
                 TabItemMinimal(
                     "Sensible/Asma",
                     Icons.Outlined.FavoriteBorder,
                     selectedTab == 1,
-                    { onTabSelected(1) },
+                    {
+                        onTabSelected(1)
+                        onClose()
+                    },
                     Modifier.weight(1f)
                 )
             }
         }
     }
 }
+
 
 @Composable
 fun TabItemMinimal(
@@ -691,6 +709,8 @@ fun MainPollutantsCardExtended(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(cardBg)
     ) {
+
+        TextButton(onClick = {creaInforme(h)}){Text("Boton Informe") }
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text("Detalle de Contaminantes", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             val list = listOf(
@@ -839,6 +859,32 @@ fun NotificationsView(onClose: () -> Unit) {
         }
     }
 }
+
+@Composable
+fun ResumeView(onClose: () -> Unit) {
+    val context = LocalContext.current
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Notificaciones", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            IconButton(onClick = onClose) { Icon(Icons.Default.Close, null) }
+        }
+
+        // 3. Si la lista obtenida está vacía, mostramos un mensaje informativo
+
+    }
+
+}
+
 
 @Composable
 fun NotificationItemMinimal(title: String, desc: String) {
